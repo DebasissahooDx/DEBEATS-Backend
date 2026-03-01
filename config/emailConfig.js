@@ -1,17 +1,20 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
-// 🚀 Optimized Transporter for Render (Fixes ENETUNREACH & IPv6 issues)
+// 🚀 Final Configuration: Specifically tuned for Render cloud environment
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Port 587 ke liye hamesha false rakhein
+    port: 465, // SSL port is often more stable on cloud servers
+    secure: true, // True for 465
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // 16-digit App Password here
+        pass: process.env.EMAIL_PASS, // Double check this 16-digit App Password
     },
+    // Adding extra time for the cloud server to handshake with Google
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
     tls: {
-        // Ye line IPv6 connection errors ko bypass karne mein help karti hai
         rejectUnauthorized: false,
         minVersion: 'TLSv1.2'
     }
@@ -21,8 +24,6 @@ export const sendOTPEmail = async (email, otp, type = 'login', name = 'User') =>
     try {
         let subject = "";
         let messageBody = "";
-
-        // ... (Aapka subject aur messageBody wala logic bilkul sahi hai, use waisa hi rehne dein)
 
         if (type === 'register') {
             subject = `Welcome to the Family, ${name.split(' ')[0]}! 🍔`;
@@ -64,7 +65,7 @@ export const sendOTPEmail = async (email, otp, type = 'login', name = 'User') =>
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent: " + info.response);
+        console.log("✅ OTP Sent Successfully to: " + email);
         return info;
 
     } catch (error) {
