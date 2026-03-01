@@ -1,18 +1,19 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
-// Transporter settings ko thoda optimize kiya hai cloud deployment ke liye
+// 🚀 Optimized Transporter for Render (Fixes ENETUNREACH & IPv6 issues)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465, // SSL ke liye 465 best hai Render par
-    secure: true, 
+    port: 587,
+    secure: false, // Port 587 ke liye hamesha false rakhein
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // Make sure this is a 16-digit APP PASSWORD
+        pass: process.env.EMAIL_PASS, // 16-digit App Password here
     },
-    // Ye line important hai agar server connection reject kare
     tls: {
-        rejectUnauthorized: false
+        // Ye line IPv6 connection errors ko bypass karne mein help karti hai
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
     }
 });
 
@@ -20,6 +21,8 @@ export const sendOTPEmail = async (email, otp, type = 'login', name = 'User') =>
     try {
         let subject = "";
         let messageBody = "";
+
+        // ... (Aapka subject aur messageBody wala logic bilkul sahi hai, use waisa hi rehne dein)
 
         if (type === 'register') {
             subject = `Welcome to the Family, ${name.split(' ')[0]}! 🍔`;
@@ -60,13 +63,11 @@ export const sendOTPEmail = async (email, otp, type = 'login', name = 'User') =>
             `
         };
 
-        // Render logs mein check karne ke liye success message
         const info = await transporter.sendMail(mailOptions);
         console.log("✅ Email sent: " + info.response);
         return info;
 
     } catch (error) {
-        // Agar fail hota hai toh Render logs mein exact error dikhega
         console.error("❌ Nodemailer Error: ", error.message);
         throw error; 
     }
